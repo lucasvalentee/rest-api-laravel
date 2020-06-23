@@ -57,17 +57,18 @@
 
             consultar = () => {
                 $(`#tabela_pessoa`).hide();
-                $("#formulario").hide();
                 $(`#tabela_pessoa tr`).not(`#cabecalho`).remove();
+
+                $(`#formulario`).hide();
+
                 $("#loading").show();
+
                 setTimeout(() => {
                     $("#loading").hide();
                     $(`#tabela_pessoa`).show();
                 }, 3000);
 
                 $.getJSON("/api/pessoas", function (aDados, iStatus) {
-                    let oTabela = $("#tabela_pessoa");
-
                     $.each(aDados, function (iIndice, oPosicao) {
                         $('<tr>', {
                             id: `linha_${iIndice}`,
@@ -95,9 +96,7 @@
                             if (data == 'OK') {
                                 $("#formulario").hide();
                                 limpaFormulario();
-                                setTimeout(() => {
-                                    $("#consultar").click();
-                                }, 1000);
+                                $("#consultar").click();
                             }
                             else if(data == 'ERRO') {
                                 alert('Ocorreu um erro ao inserir!');
@@ -121,9 +120,7 @@
                                 if (result == 'OK') {
                                     $("#formulario").hide();
                                     limpaFormulario();
-                                    setTimeout(() => {
-                                        $("#consultar").click();
-                                    }, 1000);
+                                    $("#consultar").click();
                                 }
                                 else if(data == 'ERRO') {
                                     alert('Ocorreu um erro ao alterar!');
