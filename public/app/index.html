@@ -19,10 +19,10 @@
         <table class="table table-striped" id="tabela_pessoa" style="display: none;">
             <tr id="cabecalho">
                 <th width="5%">Código</th>
-                <th width="45%">Nome</th>
-                <th width="10">Idade</th>
+                <th width="40%">Nome</th>
+                <th width="10%">Idade</th>
                 <th width="30%">Endereço</th>
-                <th width="10%">Ações</th>
+                <th width="25%">Ações</th>
             </tr>
         </table>
 
@@ -88,6 +88,7 @@
             inserir = () => {
                 $("#tabela_pessoa").hide();
                 $("#formulario").show();
+                $("#confirmar").unbind('click');
 
                 $("#confirmar").click(() => {
                     if(validaDadosFormulario()) {
@@ -109,6 +110,7 @@
             alterar = iCodigoPessoa => {
                 $("#tabela_pessoa").hide();
                 $("#formulario").show();
+                $("#confirmar").unbind('click');
 
                 $("#confirmar").click(() => {
                     if(validaDadosFormulario()) {
@@ -120,7 +122,9 @@
                                 if (result == 'OK') {
                                     $("#formulario").hide();
                                     limpaFormulario();
-                                    $("#consultar").click();
+                                    setTimeout(() => {
+                                        $("#consultar").click();
+                                    }, 1000)
                                 }
                                 else if(data == 'ERRO') {
                                     alert('Ocorreu um erro ao alterar!');
@@ -149,9 +153,10 @@
                         <td>${oDados.idade}</td>
                         <td>${oDados.endereco}</td>
                         <td>
-                            <div class='btn-group'>
-                                <a href='#' class='btn btn-sm btn-primary' id='alterar_${iIndice}'>Alterar</a>
-                                <a href='#' class='btn btn-sm btn-danger' id='deletar_${iIndice}'>Deletar</a>
+                            <div class="btn-group">
+                                <a href='#' class="btn btn-sm btn-primary" id='alterar_${iIndice}'>Alterar</a>
+                                &nbsp;
+                                <a href='#' class='btn btn-sm btn-danger' id='deletar_${iIndice}'>Excluir</a>
                             </div>
                         </td>`;
             }
