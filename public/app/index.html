@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+        <title>API</title>
+    </head>
+    <body>
+        <div class="btn-group" style="display:flex;">
+            <button class="btn btn-lg btn-info" id="consultar" onclick="consultar()">Consultar</button>
+            <button class="btn btn-lg btn-success" id="inserir" onclick="inserir()">Criar</button>
+        </div>
+
+        <div id='loading' style="display: flex; justify-content: center; margin-top: 10px;">
+            <p><strong>Carregando. . .</strong></p>
+        </div>
+
+        <table class="table table-striped" id="tabela_pessoa" style="display: none;">
+            <tr id="cabecalho">
+                <th width="5%">Código</th>
+                <th width="45%">Nome</th>
+                <th width="10">Idade</th>
+                <th width="30%">Endereço</th>
+                <th width="10%">Ações</th>
+            </tr>
+        </table>
+
+        <div width="100%" style="display: flex; justify-content: center;">
+            <form id="formulario" style='display:none; width: 50%'>
+                <div class="form-group">
+                    <label for="Nome">Nome:&nbsp;</label>
+                    <input type="text" name='nome' id='nome' class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="Idade">Idade:&nbsp;</label>
+                    <input type="number" name='idade' id='idade' maxlength="3" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="Endereço">Endereço:&nbsp;</label>
+                    <input type="text" name='endereco' id='endereco' class="form-control">
+                </div>
+                <button id='confirmar' class='btn btn-lg btn-success'>Confirmar</button>
+            </form>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+
+            $(() => {
+                $("#loading").hide();
+                $("#formulario").submit((event) => {
+                    event.preventDefault();
+                });
+            });
+
+            consultar = () => {
+                $(`#tabela_pessoa`).hide();
+                $("#formulario").hide();
+                $(`#tabela_pessoa tr`).not(`#cabecalho`).remove();
+                $("#loading").show();
+                setTimeout(() => {
+                    $("#loading").hide();
+                    $(`#tabela_pessoa`).show();
+                }, 3000);
+
+                $.getJSON("/api/pessoas", function (aDados, iStatus) {
+                    let oTabela = $("#tabela_pessoa");
+
+                    $.each(aDados, function (iIndice, oPosicao) {
+                        $('<tr>', {
+                            id: `linha_${iIndice}`,
+                            html: getConteudo(iIndice, oPosicao)
+                        }).appendTo('#tabela_pessoa');
+
+                        $(`#alterar_${iIndice}`).click(() => {
+                            preencheDadosFormulario(oPosicao);
+                            alterar(oPosicao.id);
+                        });
+
+                        $(`#deletar_${iIndice}`).click(() => deletar(oPosicao.id));
+                    });
+                });
+            }
+
+            inserir = () => {
+                $("#tabela_pessoa").hide();
+                $("#formulario").show();
+
+                $("#confirmar").click(() => {
+                    if(validaDadosFormulario()) {
+                        $.post("api/pessoas", { nome: $("#nome").val(), idade: $('#idade').val(), endereco: $("#endereco").val() },
+                        (data, status) => {
+                            if (data == 'OK') {
+                                $("#formulario").hide();
+                                limpaFormulario();
+                                setTimeout(() => {
+                                    $("#consultar").click();
+                                }, 1000);
+                            }
+                            else if(data == 'ERRO') {
+                                alert('Ocorreu um erro ao inserir!');
+                            }
+                        });
+                    }
+                });
+            }
+
+            alterar = iCodigoPessoa => {
+                $("#tabela_pessoa").hide();
+                $("#formulario").show();
+
+                $("#confirmar").click(() => {
+                    if(validaDadosFormulario()) {
+                        $.ajax({
+                            url: `api/pessoas/${iCodigoPessoa}`,
+                            type: 'PUT',
+                            data: `nome=${$("#nome").val()}&idade=${$("#idade").val()}&endereco=${$("#endereco").val()}`,
+                            success: function (result) {
+                                if (result == 'OK') {
+                                    $("#formulario").hide();
+                                    limpaFormulario();
+                                    setTimeout(() => {
+                                        $("#consultar").click();
+                                    }, 1000);
+                                }
+                                else if(data == 'ERRO') {
+                                    alert('Ocorreu um erro ao alterar!');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            deletar = iCodigoPessoa => {
+                $.ajax({
+                    url: `api/pessoas/${iCodigoPessoa}`,
+                    type: 'DELETE',
+                    success: function (result) {
+                        if (result == 'OK') {
+                            $("#consultar").click();
+                        }
+                    }
+                });
+            }
+
+            getConteudo = (iIndice, oDados) => {
+                return `<td>${oDados.id}</td>
+                        <td>${oDados.nome}</td>
+                        <td>${oDados.idade}</td>
+                        <td>${oDados.endereco}</td>
+                        <td>
+                            <div class='btn-group'>
+                                <a href='#' class='btn btn-sm btn-primary' id='alterar_${iIndice}'>Alterar</a>
+                                <a href='#' class='btn btn-sm btn-danger' id='deletar_${iIndice}'>Deletar</a>
+                            </div>
+                        </td>`;
+            }
+
+            preencheDadosFormulario = oDados => {
+                $("#nome").val(oDados.nome);
+                $("#idade").val(oDados.idade);
+                $("#endereco").val(oDados.endereco);
+            }
+
+            validaDadosFormulario = () => {
+                let bInsere = true;
+
+                if(!$("#nome").val()) {
+                    alert('Informe o nome da pessoa!');
+                    bInsere = false;
+                }
+                else if(!($("#idade").val().length <= 3) || !($("#idade").val())) {
+                    alert('Informe um número de idade válido!');
+                    bInsere = false;
+                }
+                else if(!$("#endereco").val()) {
+                    alert('Informe um endereço!');
+                    bInsere = false;
+                }
+
+                return bInsere;
+            }
+
+            limpaFormulario = () => {
+                $("#formulario div input").val('');
+            }
+
+        </script>
+    </body>
+</html>
